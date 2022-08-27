@@ -1,12 +1,12 @@
 use rand;
 use std::{cmp::min, io};
 
-const WIDTH: u8 = 7;
-const HEIGHT: u8 = 6;
+const WIDTH: i8 = 7;
+const HEIGHT: i8 = 6;
 
 fn main() {
-    let mut board: [[u8; WIDTH as usize]; HEIGHT as usize] = [[0; WIDTH as usize]; HEIGHT as usize];
-    let winner: u8;
+    let mut board: [[i8; WIDTH as usize]; HEIGHT as usize] = [[0; WIDTH as usize]; HEIGHT as usize];
+    let winner: i8;
     winner = game_loop(&mut board);
 
     if winner == 1 {
@@ -19,13 +19,13 @@ fn main() {
     print_board(&board);
 }
 
-fn game_loop(board: &mut [[u8; 7]; 6]) -> u8 {
+fn game_loop(board: &mut [[i8; 7]; 6]) -> i8 {
     let mut turn: i32 = 1;
-    let mut winner: u8;
+    let mut winner: i8;
 
     loop {
-        let player_move: u8 = get_player_move();
-        let player_piece: u8 = get_player_piece(turn);
+        let player_move: i8 = get_player_move();
+        let player_piece: i8 = get_player_piece(turn);
         let player_move_result: bool = make_move(player_move, player_piece, board);
         if player_move_result {
             turn = turn + 1;
@@ -45,8 +45,8 @@ fn game_loop(board: &mut [[u8; 7]; 6]) -> u8 {
 }
 
 //0 is not game over, 1 red won, 2 yellow won, 3 tie
-fn is_game_over(board: &[[u8; 7]; 6], turn: i32, column: u8) -> u8 {
-    let mut game_over_status: u8 = 0;
+fn is_game_over(board: &[[i8; 7]; 6], turn: i32, column: i8) -> i8 {
+    let mut game_over_status: i8 = 0;
     if turn >= 42 {
         game_over_status = 3;
         println!("TIE");
@@ -66,7 +66,7 @@ fn is_game_over(board: &[[u8; 7]; 6], turn: i32, column: u8) -> u8 {
     return game_over_status;
 }
 
-fn make_move(player_move: u8, player_piece: u8, board: &mut [[u8; 7]; 6]) -> bool {
+fn make_move(player_move: i8, player_piece: i8, board: &mut [[i8; 7]; 6]) -> bool {
     // Checks if in bounds
     if player_move > 6 {
         return false;
@@ -75,7 +75,7 @@ fn make_move(player_move: u8, player_piece: u8, board: &mut [[u8; 7]; 6]) -> boo
 }
 
 //game starts on turn 1, player 1 goes first, so have to subtract 1
-fn get_player_piece(turn: i32) -> u8 {
+fn get_player_piece(turn: i32) -> i8 {
     if (turn - 1) % 2 == 0 {
         return 1;
     } else {
@@ -83,18 +83,18 @@ fn get_player_piece(turn: i32) -> u8 {
     }
 }
 
-fn get_player_move() -> u8 {
+fn get_player_move() -> i8 {
     println!("Enter a column number (1-7): ");
     let mut player_move = String::new();
-    let mut player_move_result: u8;
+    let mut player_move_result: i8;
     loop {
         player_move.clear();
         io::stdin()
             .read_line(&mut player_move)
             .expect("Failed to read line");
-        let _player_move: u32 = match player_move.trim().parse::<u8>() {
+        let _player_move: u32 = match player_move.trim().parse::<i8>() {
             Ok(num) => {
-                player_move_result = num as u8;
+                player_move_result = num as i8;
                 if player_move_result > 0 && player_move_result < 8 {
                     break;
                 } else {
@@ -111,7 +111,7 @@ fn get_player_move() -> u8 {
     return player_move_result - 1;
 }
 
-fn print_board(board: &[[u8; 7]; 6]) {
+fn print_board(board: &[[i8; 7]; 6]) {
     // 0 = empty, 1 = red/X, 2 = yellow/O
     for i in 0..6 {
         for j in 0..7 {
@@ -127,7 +127,7 @@ fn print_board(board: &[[u8; 7]; 6]) {
     println!();
 }
 
-fn add_piece(board: &mut [[u8; 7]; 6], col: u8, piece: u8) -> bool {
+fn add_piece(board: &mut [[i8; 7]; 6], col: i8, piece: i8) -> bool {
     if col > 6 {
         return false;
     }
@@ -140,25 +140,25 @@ fn add_piece(board: &mut [[u8; 7]; 6], col: u8, piece: u8) -> bool {
     return false;
 }
 
-fn lowest_row(board: &[[u8; 7]; 6], col: u8) -> u8 {
+fn lowest_row(board: &[[i8; 7]; 6], col: i8) -> i8 {
     for i in (0..6).rev() {
         if board[i][col as usize] == 0 {
-            return i as u8;
+            return i as i8;
         }
     }
-    return 0;
+    return -1;
 }
 
-fn game_over_check(board: &[[u8; 7]; 6], column: u8) -> bool {
+fn game_over_check(board: &[[i8; 7]; 6], column: i8) -> bool {
     // keep track of how many pieces are in a row
-    let mut win_counter: u8 = 0;
+    let mut win_counter: i8 = 0;
     //gets the lowest row of a piece in the column that was selected
     // is one below the lowest 0, which is found by lowest_row()
-    let row: u8 = lowest_row(board, column) + 1;
+    let row: i8 = lowest_row(board, column) + 1;
     //grabs the color (either 1 or 2) of the piece that was selected
-    let color: u8 = board[row as usize][column as usize];
+    let color: i8 = board[row as usize][column as usize];
 
-    //println!("GOOB row: {row}, column: {column}, color: {color}");
+    println!("GOOB row: {row}, column: {column}, color: {color}");
 
     // ------------------
     // ----HORIZONTAL----
@@ -170,7 +170,7 @@ fn game_over_check(board: &[[u8; 7]; 6], column: u8) -> bool {
     // you go back the other way and check if there are enough to the left
     // to make a 4 in a row
     //start one offset to the right because we know the first one is correct
-    for i in (column + 1)..(WIDTH as u8) {
+    for i in (column + 1)..(WIDTH as i8) {
         if board[row as usize][i as usize] == color {
             //println!("HORIZONTAL: {row}, {i}, {color}");
             win_counter = win_counter + 1;
@@ -200,24 +200,29 @@ fn game_over_check(board: &[[u8; 7]; 6], column: u8) -> bool {
         }
         //println!("HORIZONTAL: win_counter: {win_counter}");
     }
+
     // ----------------
     // ----VERTICAL----
     // ----------------
     win_counter = 0;
 
-    let mut row_vertical: u8 = min(row + 1, HEIGHT - 1);
+    // You cant with vertical if the piece was not in a row above 3
+    if row < 3 {
+        let mut row_vertical: i8 = row + 1;
+        println!("VERTICAL: row_vertical: {row_vertical}");
 
-    while row_vertical < HEIGHT {
-        if board[row_vertical as usize][column as usize] == color {
-            //println!("VERTICAL: {row_vertical}, {column}, {color}");
-            win_counter = win_counter + 1;
-        } else {
-            break;
-        }
-        row_vertical = row_vertical + 1;
+        while row_vertical < HEIGHT {
+            if board[row_vertical as usize][column as usize] == color {
+                println!("VERTICAL PIECE: {row_vertical}, {column}, {color}");
+                win_counter = win_counter + 1;
+            } else {
+                break;
+            }
+            row_vertical = row_vertical + 1;
 
-        if win_counter == 3 {
-            return true;
+            if win_counter == 3 {
+                return true;
+            }
         }
     }
 
@@ -256,7 +261,6 @@ fn game_over_check(board: &[[u8; 7]; 6], column: u8) -> bool {
     //     x
     //       x
     //         X
-    win_counter = 0;
     let furthest_distance_ul = min(row, column);
     //println!("furthest_distance: {furthest_distance_ul}");
     for i in 1..furthest_distance_ul {
@@ -300,7 +304,6 @@ fn game_over_check(board: &[[u8; 7]; 6], column: u8) -> bool {
     //   x
     // X
 
-    win_counter = 0;
     let furthest_distance_ur = min(row, WIDTH - column - 1) + 1;
     //println!("furthest_distance: {furthest_distance_ur}");
     for i in 1..furthest_distance_ur {
