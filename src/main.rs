@@ -1,3 +1,4 @@
+use rand;
 use std::{cmp::min, io};
 
 const WIDTH: u8 = 7;
@@ -7,6 +8,7 @@ fn main() {
     let mut board: [[u8; WIDTH as usize]; HEIGHT as usize] = [[0; WIDTH as usize]; HEIGHT as usize];
     let winner: u8;
     winner = game_loop(&mut board);
+
     if winner == 1 {
         println!("Player 1 wins!");
     } else if winner == 2 {
@@ -65,6 +67,10 @@ fn is_game_over(board: &[[u8; 7]; 6], turn: i32, column: u8) -> u8 {
 }
 
 fn make_move(player_move: u8, player_piece: u8, board: &mut [[u8; 7]; 6]) -> bool {
+    // Checks if in bounds
+    if player_move > 6 {
+        return false;
+    }
     return add_piece(board, player_move, player_piece);
 }
 
@@ -80,7 +86,7 @@ fn get_player_piece(turn: i32) -> u8 {
 fn get_player_move() -> u8 {
     println!("Enter a column number (1-7): ");
     let mut player_move = String::new();
-    let player_move_result: u8;
+    let mut player_move_result: u8;
     loop {
         player_move.clear();
         io::stdin()
@@ -89,7 +95,12 @@ fn get_player_move() -> u8 {
         let _player_move: u32 = match player_move.trim().parse::<u8>() {
             Ok(num) => {
                 player_move_result = num as u8;
-                break;
+                if player_move_result > 0 && player_move_result < 8 {
+                    break;
+                } else {
+                    println!("Invalid move");
+                    continue;
+                }
             }
             Err(_) => {
                 println!("Invalid input");
