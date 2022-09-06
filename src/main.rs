@@ -4,6 +4,21 @@ use std::{cmp::min, io};
 const WIDTH: i8 = 7;
 const HEIGHT: i8 = 6;
 
+struct Game {
+    board: [[bool; WIDTH as usize]; HEIGHT as usize],
+    player_one: Player,
+    player_two: Player,
+}
+
+struct Player {
+    color: i8,
+    ai_type: i8,
+}
+
+fn build_player(color: i8, ai_type: i8) -> Player {
+    return Player { color, ai_type };
+}
+
 fn main() {
     let mut board: [[i8; WIDTH as usize]; HEIGHT as usize] = [[0; WIDTH as usize]; HEIGHT as usize];
     let winner: i8;
