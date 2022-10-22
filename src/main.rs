@@ -1,13 +1,25 @@
-use rand;
-use std::{cmp::min, io};
+use rand::{random, seq::SliceRandom, thread_rng, Rng};
+use std::{cmp::min, io, os::windows::thread};
 
 const WIDTH: i8 = 7;
 const HEIGHT: i8 = 6;
 
 fn main() {
+    loop {
+        game_handler(2);
+    }
+}
+
+fn game_handler(game_type: i8) {
     let mut board: [[i8; WIDTH as usize]; HEIGHT as usize] = [[0; WIDTH as usize]; HEIGHT as usize];
     let winner: i8;
-    winner = game_loop(&mut board);
+
+    // game types: 1 = player vs player, 2 = random game, 3 = player vs random
+    if game_type == 1 {
+        winner = game_loop(&mut board);
+    } else {
+        winner = game_loop_random(&mut board);
+    }
 
     if winner == 1 {
         println!("Player 1 wins!");
@@ -15,8 +27,42 @@ fn main() {
         println!("Player 2 wins!");
     } else {
         println!("Draw!");
+        panic!();
     }
     print_board(&board);
+}
+
+fn game_loop_random(board: &mut [[i8; 7]; 6]) -> i8 {
+    let mut turn: i32 = 1;
+    let mut winner: i8;
+
+    loop {
+        let random_move = random_move(board);
+        let player_piece = get_player_piece(turn);
+        let player_move_result = make_move(random_move, player_piece, board);
+
+        if player_move_result {
+            turn = turn + 1;
+            println!("Turn: {turn}");
+            print_board(board);
+        } else {
+            println!("Invalid move");
+        }
+        winner = is_game_over(board, turn, random_move);
+        if winner == 0 {
+            continue;
+        } else {
+            break;
+        }
+    }
+    return winner;
+}
+
+fn random_move(board: &[[i8; 7]; 6]) -> i8 {
+    let empty = get_valid_rows(board);
+    let mut rng = thread_rng();
+    let num = empty.choose(&mut rng);
+    return *num.unwrap() as i8;
 }
 
 fn game_loop(board: &mut [[i8; 7]; 6]) -> i8 {
@@ -47,7 +93,7 @@ fn game_loop(board: &mut [[i8; 7]; 6]) -> i8 {
 //0 is not game over, 1 red won, 2 yellow won, 3 tie
 fn is_game_over(board: &[[i8; 7]; 6], turn: i32, column: i8) -> i8 {
     let mut game_over_status: i8 = 0;
-    if turn >= 42 {
+    if turn > 42 {
         game_over_status = 3;
         println!("TIE");
         return game_over_status;
@@ -140,6 +186,16 @@ fn add_piece(board: &mut [[i8; 7]; 6], col: i8, piece: i8) -> bool {
     return false;
 }
 
+fn get_valid_rows(board: &[[i8; 7]; 6]) -> Vec<i8> {
+    let mut valid_rows: Vec<i8> = Vec::new();
+    for i in 0..=6 {
+        if lowest_row(board, i) != -1 {
+            valid_rows.push(i);
+        }
+    }
+    return valid_rows;
+}
+
 fn lowest_row(board: &[[i8; 7]; 6], col: i8) -> i8 {
     for i in (0..6).rev() {
         if board[i][col as usize] == 0 {
@@ -158,7 +214,7 @@ fn game_over_check(board: &[[i8; 7]; 6], column: i8) -> bool {
     //grabs the color (either 1 or 2) of the piece that was selected
     let color: i8 = board[row as usize][column as usize];
 
-    println!("GOOB row: {row}, column: {column}, color: {color}");
+    println!("Game check: row: {row}, column: {column}, color: {color}");
 
     // ------------------
     // ----HORIZONTAL----
@@ -209,11 +265,11 @@ fn game_over_check(board: &[[i8; 7]; 6], column: i8) -> bool {
     // You cant with vertical if the piece was not in a row above 3
     if row < 3 {
         let mut row_vertical: i8 = row + 1;
-        println!("VERTICAL: row_vertical: {row_vertical}");
+        // println!("VERTICAL: row_vertical: {row_vertical}");
 
         while row_vertical < HEIGHT {
             if board[row_vertical as usize][column as usize] == color {
-                println!("VERTICAL PIECE: {row_vertical}, {column}, {color}");
+                // println!("VERTICAL PIECE: {row_vertical}, {column}, {color}");
                 win_counter = win_counter + 1;
             } else {
                 break;
