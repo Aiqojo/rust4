@@ -5,15 +5,28 @@ mod player;
 
 const WIDTH: usize = 7;
 const HEIGHT: usize = 6;
+const TOTAL_GAMES: f32 = 100000000.0;
 
 fn main() {
     // set a timer to find out how many games per second the computer can play
     let start = std::time::Instant::now();
     let mut game_number = 1;
-    for _ in 0..1000000 {
+    let mut player1_wins = 0;
+    let mut player2_wins = 0;
+    let mut ties = 0;
+
+    for _ in 0..TOTAL_GAMES as usize {
         // game types: 1 = player vs player, 2 = random game, 3 = player vs random
-        game_handler(2, false);
-        //println!("Game {} over", game_number);
+        let winner: usize;
+        winner = game_handler(1, 1, false);
+
+        match winner {
+            1 => player1_wins += 1,
+            2 => player2_wins += 1,
+            3 => ties += 1,
+            _ => println!("Error: winner is not 1, 2, or 3"),
+        }
+
         game_number += 1;
         if game_number % 10000 == 0 {
             println!("{} games played", game_number);
@@ -25,23 +38,20 @@ fn main() {
     println!("{} milisecond elapsed", elapsed.as_millis());
     println!(
         "{} games per milisecond",
-        1000000.0 / elapsed.as_millis() as f64
+        TOTAL_GAMES / elapsed.as_millis() as f32
     );
-    println!("{} games per second", 1000000.0 / elapsed.as_secs_f64());
+    println!("{} games per second", TOTAL_GAMES / elapsed.as_secs_f32());
+    println!("{} games won by player 1", player1_wins);
+    println!("{} games won by player 2", player2_wins);
+    println!("{} games tied", ties);
 }
 
-fn game_handler(game_type: usize, print: bool) {
+fn game_handler(p1: usize, p2: usize, print: bool) -> usize {
     let mut board: board::Board = board::new_board(WIDTH, HEIGHT);
     let winner: usize;
 
-    // game types: 1 = player vs player, 2 = random game, 3 = player vs random
-    if game_type == 1 {
-        winner = game_loop(&mut board, print, 0, 0);
-    } else if game_type == 2 {
-        winner = game_loop(&mut board, print, 1, 1);
-    } else {
-        panic!("Invalid game type");
-    }
+    // player types: 1 = player, 2 = random, 3 = randosmart
+    winner = game_loop(&mut board, print, p1 as i8, p2 as i8);
 
     if print {
         println!("Winner: {}", winner);
@@ -50,6 +60,7 @@ fn game_handler(game_type: usize, print: bool) {
     if print {
         board::print_board(&mut board);
     }
+    return winner;
 }
 
 fn game_loop(board: &mut board::Board, print: bool, p1_type: i8, p2_type: i8) -> usize {

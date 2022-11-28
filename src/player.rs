@@ -24,7 +24,10 @@ pub fn get_move(player: &Player, board: &mut Board) -> usize {
 
 // pub fn minimax_move(board: &mut Board) -> usize {}
 
-// pub fn rando_smart_move(board: &mut Board) -> usize {}
+//  Looks for an immediate win, if it can't find one, it looks for an immediate loss, if it can't find one, it makes a random move
+pub fn randosmart_move(board: &mut Board) -> usize {
+    
+}
 
 pub fn random_move(board: &mut Board) -> usize {
     let lowest = board.lowest_empty.clone();
@@ -32,7 +35,7 @@ pub fn random_move(board: &mut Board) -> usize {
     let empty: Vec<usize> = lowest
         // Gets iterator of lowest_empty
         .iter()
-        // Enumerates the iterator
+        // Enumerates through the iterator
         .enumerate()
         // Filters out the columns that are = 0, so full
         .filter(|&(_, &x)| x != 0)

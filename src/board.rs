@@ -121,6 +121,7 @@ pub fn game_over_check(board: &mut Board, column: usize) -> bool {
     // ----------------
     // ----VERTICAL----
     // ----------------
+
     win_counter = 0;
 
     // You cant with vertical if the piece was not in a row above 3
