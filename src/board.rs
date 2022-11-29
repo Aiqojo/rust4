@@ -17,6 +17,15 @@ pub fn new_board(width: usize, height: usize) -> Board {
     }
 }
 
+pub fn clone_board(board: &Board) -> Board {
+    Board {
+        width: board.width,
+        // height: board.height,
+        grid: board.grid.clone(),
+        lowest_empty: board.lowest_empty.clone(),
+    }
+}
+
 pub fn make_move(player_move: usize, player_piece: usize, board: &mut Board) -> bool {
     // Checks if player_move in bounds
     if player_move > board.width - 1 {
@@ -72,7 +81,14 @@ pub fn game_over_check(board: &mut Board, column: usize) -> bool {
     //gets the lowest row of a piece in the column that was selected
     // 6 = empty column, 0 = full column
     let row: isize = board.lowest_empty[column] as isize;
+    // If column is empty return false, there can be no possible win
+    if row == 6 {
+        return false;
+    }
+
     //grabs the color (either 1 or 2) of the piece that was selected
+    // print row and column
+    // println!("row: {}, column: {}", row, column);
     let color: usize = board.grid[row as usize][column];
 
     //println!("Game check: row: {row}, column: {column}, color: {color}");
@@ -124,7 +140,8 @@ pub fn game_over_check(board: &mut Board, column: usize) -> bool {
 
     win_counter = 0;
 
-    // You cant with vertical if the piece was not in a row above 3
+    // You cant win vertical if there isn't already at least 3 pieces underneath
+    // so we dont check those
     if row < 3 {
         let mut row_vertical: isize = row + 1;
         // //println!("VERTICAL: row_vertical: {row_vertical}");

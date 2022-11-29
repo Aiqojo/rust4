@@ -1,13 +1,15 @@
 // use rand::{random, seq::SliceRandom, thread_rng, Rng};
 // use std::{cmp::min, io, os::windows::thread};
+use std::env;
 mod board;
 mod player;
 
 const WIDTH: usize = 7;
 const HEIGHT: usize = 6;
-const TOTAL_GAMES: f32 = 100000000.0;
+const TOTAL_GAMES: f32 = 1000000.0;
 
 fn main() {
+    env::set_var("RUST_BACKTRACE", "1");
     // set a timer to find out how many games per second the computer can play
     let start = std::time::Instant::now();
     let mut game_number = 1;
@@ -16,9 +18,10 @@ fn main() {
     let mut ties = 0;
 
     for _ in 0..TOTAL_GAMES as usize {
-        // game types: 1 = player vs player, 2 = random game, 3 = player vs random
         let winner: usize;
-        winner = game_handler(1, 1, false);
+
+        // 0 = human, 1 = random, 2 = randosmart, 3 = minimax
+        winner = game_handler(2, 2, false);
 
         match winner {
             1 => player1_wins += 1,
@@ -70,8 +73,8 @@ fn game_loop(board: &mut board::Board, print: bool, p1_type: i8, p2_type: i8) ->
     let mut winner: usize;
     // Creates a player object for each player
     // player_type: 0 = human, 1 = random, 2 = randosmart, 3 = minimax
-    let player1 = player::new_player(p1_type);
-    let player2 = player::new_player(p2_type);
+    let player1 = player::new_player(p1_type, 1);
+    let player2 = player::new_player(p2_type, 2);
     // Tracks most recent move
     let mut player_move: usize;
 
