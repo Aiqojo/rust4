@@ -104,5 +104,6 @@ pub fn get_human_move() -> usize {
             }
         };
     }
+    println!();
     return player_move_result - 1;
 }

@@ -53,6 +53,10 @@ fn game_handler(p1: usize, p2: usize, print: bool) -> usize {
     let mut board: board::Board = board::new_board(WIDTH, HEIGHT);
     let winner: usize;
 
+    if print {
+        board::print_board(&mut board);
+    }
+
     // player types: 1 = player, 2 = random, 3 = randosmart
     winner = game_loop(&mut board, print, p1 as i8, p2 as i8);
 
@@ -96,6 +100,11 @@ fn game_loop(board: &mut board::Board, print: bool, p1_type: i8, p2_type: i8) ->
             turn = turn + 1;
             if print {
                 println!("Turn: {turn}");
+                println!(
+                    "Player {} moved to column {}",
+                    player_piece,
+                    player_move + 1
+                );
                 board::print_board(board);
             }
         } else {

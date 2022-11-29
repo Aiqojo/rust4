@@ -76,6 +76,9 @@ pub fn print_board(board: &mut Board) {
 }
 
 pub fn game_over_check(board: &mut Board, column: usize) -> bool {
+    // range of column is 0-6
+    // range of row is 0-5
+
     // keep track of how many pieces are in a row
     let mut win_counter: usize = 0;
     //gets the lowest row of a piece in the column that was selected
