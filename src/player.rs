@@ -3,6 +3,7 @@ use crate::board::Board;
 use rand::{seq::SliceRandom, thread_rng};
 use std::io;
 
+#[derive(Copy, Clone)]
 pub struct Player {
     // 0 = human, 1 = random, 2 = randosmart, 3 = minimax
     player_type: i8,
@@ -22,40 +23,155 @@ pub fn get_move(player: &Player, board: &mut Board) -> usize {
         0 => get_human_move(),
         1 => random_move(board),
         2 => randosmart_move(&player, board),
-        // 3 => minimax_move(board),
+        3 => minimax_move(&player, board),
         _ => 0,
     }
 }
 
-// pub fn minimax_move(board: &mut Board) -> usize {}
+pub fn minimax_move(player: &Player, board: &mut Board) -> usize {
+    let mut rng = thread_rng();
+    let mut next_turn_wins = Vec::new();
+    let mut t_board = board::clone_board(board);
+    let depth = 3;
+
+    // finding any immediate wins
+    for i in 0..7 {
+        if board::add_piece(&mut t_board, i, player.player_piece) {
+            if board::game_over_check(&mut t_board) {
+                next_turn_wins.push(i);
+            }
+            board::undo_move(&mut t_board);
+        }
+    }
+    // randomly select a move that wins next turn
+    if next_turn_wins.len() > 0 {
+        println!("Found i-winning move: {:?}", next_turn_wins);
+        return *next_turn_wins.choose(&mut rng).unwrap();
+    }
+
+    let opponent_color = if player.player_piece == 1 { 2 } else { 1 };
+
+    // Finding minimax values for each column
+    let empty = board::get_empty_columns(board);
+    let mut column_values: Vec<i32> = Vec::new();
+    for column in empty {
+        if board::add_piece(&mut t_board, column, player.player_piece) {
+            column_values.push(minimax(&mut t_board, depth, *player, opponent_color));
+            board::undo_move(&mut t_board);
+        } else {
+            column_values.push(-f64::INFINITY as i32);
+        }
+    }
+
+    println!("VALUES: {:?}", column_values);
+
+    let empty = board::get_empty_columns(board);
+    println!("COLUMN: {:?}", empty);
+    // Return max of the column_values
+    let mut max = column_values[0];
+    let mut max_index = 0;
+    for i in 0..empty.len() {
+        if column_values[i] > max {
+            max = column_values[i];
+            max_index = i;
+        }
+    }
+    println!("Max value: {}", max);
+
+    return empty[max_index];
+}
+
+pub fn minimax(board: &mut Board, depth: i32, player: Player, color: usize) -> i32 {
+    let p_color = player.player_piece;
+    let o_color = if p_color == 1 { 2 } else { 1 };
+
+    // If 0 depth, return 0, no information was gained
+    if depth == 0 {
+        return 0;
+    }
+
+    // If no more empty columns, return 0, it's a tie
+    let empty = board::get_empty_columns(board);
+    if empty.len() == 0 {
+        return 0;
+    }
+
+    // Keeping track of best scores
+    let mut best_score: f64;
+    if color == player.player_piece {
+        // If it's the players turn, we want to maximize the score
+        // So we start with the lowest possible score
+        best_score = -f64::INFINITY;
+    } else {
+        // Opposite for opponent
+        best_score = f64::INFINITY;
+    }
+
+    let win_score: i32 = 100 * depth;
+    let lose_score: i32 = -100 * depth;
+
+    let mut t_board = board::clone_board(board);
+    // For each empty column
+    for column in empty.iter() {
+        // If we can add a piece to the column
+        let piece_place = board::add_piece(&mut t_board, *column, color);
+        let win = board::game_over_check(board);
+        // If we win, return win score, depending on player color and depth
+        if win {
+            board::undo_move(&mut t_board);
+            if color == p_color {
+                println!("WON {} {}", win_score, column);
+                return win_score;
+            } else {
+                println!("LOST {} {}", lose_score, column);
+                return lose_score;
+            }
+        }
+        // If there is no immediate win, we need to check the next depth
+        if color == p_color {
+            let score = minimax(&mut t_board, depth - 1, player, o_color);
+            best_score = best_score.max(score as f64);
+        } else {
+            let score = minimax(&mut t_board, depth - 1, player, p_color);
+            best_score = best_score.min(score as f64);
+        }
+        // Undo move
+        board::undo_move(&mut t_board);
+    }
+
+    return best_score as i32;
+}
 
 //  Looks for an immediate win, if it can't find one, it looks for an immediate loss,
 // if it can't find one, it makes a random move
 pub fn randosmart_move(player: &Player, board: &mut Board) -> usize {
-    // Checking if randosmart can win
+    // Checks if randomsmart can win by placing a piece in some column
     for i in 0..6 {
-        // println!("Checking if randosmart can win at {}", i);
-        if board::game_over_check(board, i) {
+        board::add_piece(board, i, player.player_piece);
+        if board::game_over_check(board) {
+            println!("Found a winning move: {}", i);
             return i;
         }
+        board::undo_move(board);
     }
 
     // Clone board
     let mut temp_board = board::clone_board(board);
     for i in 0..6 {
-        // Get opponent's piece
+        // Get opponent's piece and place it in column i
         let opponent_piece = if player.player_piece == 1 { 2 } else { 1 };
-        // Place opponent's piece in column i
         board::add_piece(&mut temp_board, i, opponent_piece);
-        // Check if opponent can win
-        if board::game_over_check(&mut temp_board, i) {
-            // If opponent can win, place piece in column i to block win
+
+        // If opponent can win, place piece in column i to block win
+        if board::game_over_check(&mut temp_board) {
             return i;
+        } else {
+            // Undo the move
+            board::undo_move(&mut temp_board);
         }
     }
 
     // If there is no immediate win or loss, make a random move
-    // println!("Making a random move");
     return random_move(board);
 }
 

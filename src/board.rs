@@ -6,6 +6,8 @@ pub struct Board {
     // height: usize,
     grid: Vec<Vec<usize>>,
     pub lowest_empty: Vec<usize>,
+    last_move: isize,
+    print: bool,
 }
 
 pub fn new_board(width: usize, height: usize) -> Board {
@@ -14,6 +16,8 @@ pub fn new_board(width: usize, height: usize) -> Board {
         // height,
         grid: vec![vec![0; width as usize]; height as usize],
         lowest_empty: vec![height; width],
+        last_move: -1,
+        print: true,
     }
 }
 
@@ -23,16 +27,36 @@ pub fn clone_board(board: &Board) -> Board {
         // height: board.height,
         grid: board.grid.clone(),
         lowest_empty: board.lowest_empty.clone(),
+        last_move: board.last_move,
+        print: true,
     }
 }
 
-pub fn make_move(player_move: usize, player_piece: usize, board: &mut Board) -> bool {
-    // Checks if player_move in bounds
-    if player_move > board.width - 1 {
-        return false;
+pub fn get_empty_columns(board: &Board) -> Vec<usize> {
+    let mut empty_columns = Vec::new();
+    for i in 0..board.width {
+        if board.lowest_empty[i] > 0 {
+            empty_columns.push(i);
+        }
     }
-    return add_piece(board, player_move, player_piece);
+    return empty_columns;
 }
+
+pub fn undo_move(board: &mut Board) {
+    if board.last_move != -1 {
+        board.grid[board.lowest_empty[board.last_move as usize]][board.last_move as usize] = 0;
+        board.lowest_empty[board.last_move as usize] += 1;
+        board.last_move = -1;
+    }
+}
+
+// pub fn make_move(player_move: usize, player_piece: usize, board: &mut Board) -> bool {
+//     // Checks if player_move in bounds
+//     if player_move > board.width - 1 {
+//         return false;
+//     }
+//     return add_piece(board, player_move, player_piece);
+// }
 
 pub fn add_piece(board: &mut Board, col: usize, piece: usize) -> bool {
     // If column is out of boudns return false
@@ -45,6 +69,8 @@ pub fn add_piece(board: &mut Board, col: usize, piece: usize) -> bool {
     }
     // Add piece to board
     board.grid[board.lowest_empty[col] - 1][col] = piece;
+    // Save the last move
+    board.last_move = col as isize;
     // Increment lowest empty
     board.lowest_empty[col] -= 1;
     return true;
@@ -68,14 +94,22 @@ pub fn print_board(board: &mut Board) {
                 1 => print!("  X"),
                 2 => print!("  O"),
                 _ => print!("  ?"),
+                // 0 => print!("  0"),
+                // 1 => print!("  1"),
+                // 2 => print!("  2"),
+                // _ => print!("  ?"),
             }
         }
         println!();
     }
+    for i in 0..7 {
+        print!("  {}", i + 1);
+    }
     println!();
 }
 
-pub fn game_over_check(board: &mut Board, column: usize) -> bool {
+pub fn game_over_check(board: &mut Board) -> bool {
+    let column = board.last_move as usize;
     // range of column is 0-6
     // range of row is 0-5
 
@@ -93,6 +127,7 @@ pub fn game_over_check(board: &mut Board, column: usize) -> bool {
     // print row and column
     // println!("row: {}, column: {}", row, column);
     let color: usize = board.grid[row as usize][column];
+    // print!("color: {} \n", color);
 
     //println!("Game check: row: {row}, column: {column}, color: {color}");
 
@@ -105,32 +140,38 @@ pub fn game_over_check(board: &mut Board, column: usize) -> bool {
     // keeping track of the last column there was a correct color piece,
     // you go back the other way and check if there are enough to the left
     // to make a 4 in a row
-    //start one offset to the right because we know the first one is correct
+    // start one offset to the right because we know the first one is correct
     for i in (column + 1)..board.grid[row as usize].len() as usize {
         if board.grid[row as usize][i as usize] == color {
-            //println!("HORIZONTAL: {row}, {i}, {color}");
+            // println!("HORIZONTAL: {row}, {i}, {color}");
             win_counter = win_counter + 1;
         //if its not the same color, break we move to looking to the left
         } else {
             break;
         }
-
         if win_counter == 3 {
+            if board.print {
+                println!("HORIZONTAL WIN1");
+            }
             return true;
         }
         //println!("HORIZONTAL: win_counter: {win_counter}");
     }
-    //look to the right starting from the original column
+    //look to the left starting from the original column
     if column > 0 {
         for i in (0..column).rev() {
             if board.grid[row as usize][i as usize] == color {
-                //println!("HORIZONTAL REVERSE: {row}, {i}, {color}");
+                let l = board.grid[row as usize][i as usize];
+                // println!("HR: row: {row}, i: {i}, color: {color}, l: {l}");
                 win_counter = win_counter + 1;
             } else {
                 break;
             }
 
             if win_counter == 3 {
+                if board.print {
+                    println!("HORIZONTAL WIN2");
+                }
                 return true;
             }
         }
@@ -159,6 +200,9 @@ pub fn game_over_check(board: &mut Board, column: usize) -> bool {
             row_vertical = row_vertical + 1;
 
             if win_counter == 3 {
+                if board.print {
+                    println!("VERTICAL WIN");
+                }
                 return true;
             }
         }
@@ -193,6 +237,9 @@ pub fn game_over_check(board: &mut Board, column: usize) -> bool {
             break;
         }
         if win_counter == 3 {
+            if board.print {
+                println!("DIAGONAL WIN1");
+            }
             return true;
         }
     }
@@ -213,6 +260,9 @@ pub fn game_over_check(board: &mut Board, column: usize) -> bool {
             break;
         }
         if win_counter == 3 {
+            if board.print {
+                println!("DIAGONAL WIN2");
+            }
             return true;
         }
     }
@@ -235,6 +285,9 @@ pub fn game_over_check(board: &mut Board, column: usize) -> bool {
             break;
         }
         if win_counter == 3 {
+            if board.print {
+                println!("DIAGONAL WIN3");
+            }
             return true;
         }
     }
@@ -256,29 +309,12 @@ pub fn game_over_check(board: &mut Board, column: usize) -> bool {
             break;
         }
         if win_counter == 3 {
+            if board.print {
+                println!("DIAGONAL WIN4");
+            }
             return true;
         }
     }
 
     return false;
 }
-
-// Below is replaced by board.lowest_empty
-// pub fn update_valid_rows(board: &mut Board) {
-//     let mut valid_rows: Vec<usize> = Vec::new();
-//     for i in 0..=6 {
-//         if lowest_row(board, i) != -1 {
-//             valid_rows.push(i);
-//         }
-//     }
-//     board.lowest_empty = valid_rows;
-// }
-
-// pub fn lowest_row(board: &mut Board, col: usize) -> isize {
-//     for i in (0..6).rev() {
-//         if board.grid[i][col as usize] == 0 {
-//             return i as isize;
-//         }
-//     }
-//     return -1;
-// }

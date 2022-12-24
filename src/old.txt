@@ -1,0 +1,20 @@
+found at bottom of board
+// Below is replaced by board.lowest_empty
+// pub fn update_valid_rows(board: &mut Board) {
+//     let mut valid_rows: Vec<usize> = Vec::new();
+//     for i in 0..=6 {
+//         if lowest_row(board, i) != -1 {
+//             valid_rows.push(i);
+//         }
+//     }
+//     board.lowest_empty = valid_rows;
+// }
+
+// pub fn lowest_row(board: &mut Board, col: usize) -> isize {
+//     for i in (0..6).rev() {
+//         if board.grid[i][col as usize] == 0 {
+//             return i as isize;
+//         }
+//     }
+//     return -1;
+// }

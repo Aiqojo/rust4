@@ -3,10 +3,12 @@
 use std::env;
 mod board;
 mod player;
+use rand::thread_rng;
+use std::{thread, time};
 
 const WIDTH: usize = 7;
 const HEIGHT: usize = 6;
-const TOTAL_GAMES: f32 = 1000000.0;
+const TOTAL_GAMES: f32 = 100000.0;
 
 fn main() {
     env::set_var("RUST_BACKTRACE", "1");
@@ -21,7 +23,7 @@ fn main() {
         let winner: usize;
 
         // 0 = human, 1 = random, 2 = randosmart, 3 = minimax
-        winner = game_handler(2, 2, false);
+        winner = game_handler(0, 3, true);
 
         match winner {
             1 => player1_wins += 1,
@@ -64,9 +66,6 @@ fn game_handler(p1: usize, p2: usize, print: bool) -> usize {
         println!("Winner: {}", winner);
     }
 
-    if print {
-        board::print_board(&mut board);
-    }
     return winner;
 }
 
@@ -81,6 +80,7 @@ fn game_loop(board: &mut board::Board, print: bool, p1_type: i8, p2_type: i8) ->
     let player2 = player::new_player(p2_type, 2);
     // Tracks most recent move
     let mut player_move: usize;
+    let mut rng = thread_rng();
 
     // Game loop that only breaks upon tie or win
     loop {
@@ -88,13 +88,15 @@ fn game_loop(board: &mut board::Board, print: bool, p1_type: i8, p2_type: i8) ->
         let player_piece: usize = board::get_player_piece(turn);
         // If turn is odd, it's player 1's turn
         if player_piece == 1 {
-            player_move = player::get_move(&player1, board);
+            // player_move = player::get_move(&player1, &mut board::clone_board(board), &mut rng);
+            player_move = player::get_move(&player1, &mut board::clone_board(board));
         } else {
-            player_move = player::get_move(&player2, board);
+            // player_move = player::get_move(&player2, &mut board::clone_board(board), &mut rng);
+            player_move = player::get_move(&player2, &mut board::clone_board(board));
         }
 
         // Makes the move and checks if it was valid
-        let player_move_result: bool = board::make_move(player_move, player_piece, board);
+        let player_move_result: bool = board::add_piece(board, player_move, player_piece);
         // If it was valid, we increment the turn and print the board if print is true
         if player_move_result {
             turn = turn + 1;
@@ -108,14 +110,17 @@ fn game_loop(board: &mut board::Board, print: bool, p1_type: i8, p2_type: i8) ->
                 board::print_board(board);
             }
         } else {
-            if print {
-                println!("Invalid move");
+            if !print {
+                println!("Invalid move: {}", player_move);
+                // panic!("Invalid move");
             }
         }
         // Checks if the game is over
-        winner = is_game_over(board, turn, player_move);
+        winner = is_game_over(board, turn);
         // 0 = no winner yet, 1 = player 1 wins, 2 = player 2 wins, 3 = tie
         if winner == 0 {
+            // Delay for 1 second
+            thread::sleep(time::Duration::from_millis(200));
             continue;
         } else {
             // println!("Winner: {}", winner);
@@ -126,14 +131,14 @@ fn game_loop(board: &mut board::Board, print: bool, p1_type: i8, p2_type: i8) ->
 }
 
 //0 is not game over, 1 red won, 2 yellow won, 3 tie
-fn is_game_over(board: &mut board::Board, turn: i32, column: usize) -> usize {
+fn is_game_over(board: &mut board::Board, turn: i32) -> usize {
     let mut game_over_status: usize = 0;
     if turn > 42 {
         game_over_status = 3;
         //println!("TIE");
         return game_over_status;
     } else {
-        let win: bool = board::game_over_check(board, column);
+        let win: bool = board::game_over_check(board);
         if win {
             // Because turn is incremented before this function is called, we need to subtract 1
             if (turn - 1) % 2 == 1 {
